@@ -71,3 +71,67 @@ if __name__ == "__main__":
         scrape_intel(user_url)
     else:
         print("[!] Error: Please enter a valid URL starting with http:// or https://")
+
+import requests
+import re
+import time
+
+# Use a 'set' for visited URLs because it automatically prevents duplicates
+visited_urls = set()
+
+def scrape_intel(url, depth=1):
+    # Stop if we've reached our depth limit or already visited this URL
+    if depth == 0 or url in visited_urls:
+        return
+    
+    visited_urls.add(url)
+    print(f"\n[*] [Depth {depth}] Scanning: {url}")
+    
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        response = requests.get(url, headers=headers, timeout=5)
+        
+        if response.status_code == 200:
+            content = response.text
+            
+            # --- EXTRACT EMAILS ---
+            emails = set(re.findall(r'[a-zA-Z0-9.\-_]+@[a-zA-Z0-9.\-_]+\.[a-z]{2,}', content))
+            if emails:
+                print(f"  [+] Found: {list(emails)}")
+            
+            # --- FIND INTERNAL LINKS ---
+            # This regex looks for links that stay on the same domain
+            links = re.findall(r'href=["\'](https?://.*?)["\']', content)
+            
+            # --- SAVE DATA ---
+            with open("intel_report.txt", "a") as f:
+                f.write(f"URL: {url}\nEmails: {list(emails)}\n\n")
+
+            # --- RECURSIVE STEP ---
+            for link in list(set(links))[:5]: # Limit to first 5 links per page to stay fast
+                # We only follow links to the same site to avoid wandering off
+                if "wikipedia.org" in link: # Replace with your target domain
+                    time.sleep(1) # Be polite! Don't spam the server
+                    scrape_intel(link, depth - 1)
+
+    except Exception as e:
+        print(f"  [!] Failed {url}: {e}")
+
+if __name__ == "__main__":
+    target = input("[?] Target URL to crawl: ")
+    scrape_intel(target, depth=2) # Depth 2 means Home Page + 1 layer of subpages
+    print(f"\n[!] Recon Complete. Total pages visited: {len(visited_urls)}")
+
+# --- SMART RECURSIVE STEP ---
+            # Keywords that usually lead to better "intel"
+            interesting_words = ['about', 'staff', 'contact', 'login', 'admin', 'portal']
+
+            for link in list(set(links)):
+                # Check if the link is internal AND looks interesting
+                if "wikipedia.org" in link: # Remember to match your target domain!
+                    
+                    # Only follow the link if it contains one of our interesting words
+                    if any(word in link.lower() for word in interesting_words):
+                        if link not in visited_urls:
+                            time.sleep(1)
+                            scrape_intel(link, depth - 1)
