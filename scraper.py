@@ -8,7 +8,7 @@ def scrape_intel(url):
     print(f"[*] Scanning {url} for sensitive patterns...")
     
     try:
-        # User-Agent header helps avoid being blocked by the website
+        # User-Agent header helps avoid being blocked
         headers = {'User-Agent': 'Mozilla/5.0'}
         response = requests.get(url, headers=headers, timeout=10)
         
@@ -25,11 +25,17 @@ def scrape_intel(url):
                 print(f"[!] ALERT: Found potential sensitive keywords: {found_secrets}")
             
             # --- EMAIL & LINK EXTRACTION ---
-            # Finds patterns like user@domain.com
             emails = re.findall(r'[a-zA-Z0-9.\-_]+@[a-zA-Z0-9.\-_]+\.[a-z]{2,}', content)
-            
-            # Finds patterns like http:// or https://
             links = re.findall(r'href=["\'](https?://.*?)["\']', content)
+
+            # --- API KEY REGEX PATTERNS ---
+            google_keys = re.findall(r'AIza[0-9A-Za-z\\-_]{35}', content)
+            aws_keys = re.findall(r'AKIA[0-9A-Z]{16}', content)
+
+            if google_keys:
+                print(f"[!!!] POTENTIAL GOOGLE API KEY FOUND: {google_keys}")
+            if aws_keys:
+                print(f"[!!!] POTENTIAL AWS KEY FOUND: {aws_keys}")
 
             print(f"[+] Found {len(set(emails))} unique emails.")
             print(f"[+] Found {len(set(links))} unique links.")
@@ -39,6 +45,7 @@ def scrape_intel(url):
                 f.write(f"\n--- Intel Report for {url} ---\n")
                 f.write(f"Flagged Keywords: {found_secrets}\n")
                 f.write(f"Emails: {list(set(emails))}\n")
+                if google_keys: f.write(f"Google Keys: {google_keys}\n")
                 f.write("-" * 30 + "\n")
             
             print("[*] Results saved to intel_report.txt")
@@ -46,9 +53,10 @@ def scrape_intel(url):
             print(f"[!] Failed to reach site. Status code: {response.status_code}")
 
     except Exception as e:
+        # This block catches connection errors, timeouts, etc.
         print(f"[!] Error: {e}")
 
 # --- TEST THE FUNCTION ---
-# You can change this URL to any site you have permission to scan
+# These lines have NO spaces before them!
 target_url = "https://www.wikipedia.org" 
 scrape_intel(target_url)
