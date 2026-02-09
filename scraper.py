@@ -58,5 +58,16 @@ def scrape_intel(url):
 
 # --- TEST THE FUNCTION ---
 # These lines have NO spaces before them!
-target_url = "https://www.wikipedia.org" 
-scrape_intel(target_url)
+# --- INTERACTIVE SECTION ---
+# This replaces the hardcoded URL with a prompt for the user
+if __name__ == "__main__":
+    print("\n" + "="*30)
+    print(" WEB RECON SCRAPER v1.0 ")
+    print("="*30)
+    
+    user_url = input("[?] Which URL would you like to scan today? (Include http/https): ")
+    
+    if user_url.startswith("http"):
+        scrape_intel(user_url)
+    else:
+        print("[!] Error: Please enter a valid URL starting with http:// or https://")
