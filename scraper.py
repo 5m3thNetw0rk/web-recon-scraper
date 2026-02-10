@@ -1,137 +1,79 @@
 import requests
 import re
+import time
+import random
+import concurrent.futures
 
-def scrape_intel(url):
-    # 1. Define our "Red Flag" keywords
-    secrets_keywords = ['api_key', 'secret', 'password', 'aws_token', 'internal_only', 'config']
+# --- 1. SETUP & MEMORY ---
+# These keep track of where we've been and who we are pretending to be
+visited_urls = set()
+user_agents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15'
+]
+
+def scrape_intel(url, depth=1):
+    """
+    This is the core function. It visits a URL, finds emails/links, 
+    and then calls itself to dive deeper.
+    """
+    # Safety checks: stop if depth is 0 or if we already visited this link
+    if depth == 0 or url in visited_urls:
+        return
     
-    print(f"[*] Scanning {url} for sensitive patterns...")
+    visited_urls.add(url)
+    links_to_follow = [] # Initializing this here prevents the 'not defined' error
     
     try:
-        # User-Agent header helps avoid being blocked
-        headers = {'User-Agent': 'Mozilla/5.0'}
+        # 1. Prepare the request
+        headers = {'User-Agent': random.choice(user_agents)}
+        print(f"[*] Thread exploring: {url}")
+        
+        # 2. Make the connection
         response = requests.get(url, headers=headers, timeout=10)
         
         if response.status_code == 200:
             content = response.text
             
-            # --- SECRET FINDER LOGIC ---
-            found_secrets = []
-            for word in secrets_keywords:
-                if word in content.lower():
-                    found_secrets.append(word)
-            
-            if found_secrets:
-                print(f"[!] ALERT: Found potential sensitive keywords: {found_secrets}")
-            
-            # --- EMAIL & LINK EXTRACTION ---
-            emails = re.findall(r'[a-zA-Z0-9.\-_]+@[a-zA-Z0-9.\-_]+\.[a-z]{2,}', content)
-            links = re.findall(r'href=["\'](https?://.*?)["\']', content)
-
-            # --- API KEY REGEX PATTERNS ---
-            google_keys = re.findall(r'AIza[0-9A-Za-z\\-_]{35}', content)
-            aws_keys = re.findall(r'AKIA[0-9A-Z]{16}', content)
-
-            if google_keys:
-                print(f"[!!!] POTENTIAL GOOGLE API KEY FOUND: {google_keys}")
-            if aws_keys:
-                print(f"[!!!] POTENTIAL AWS KEY FOUND: {aws_keys}")
-
-            print(f"[+] Found {len(set(emails))} unique emails.")
-            print(f"[+] Found {len(set(links))} unique links.")
-            
-            # --- SAVE THE REPORT ---
-            with open("intel_report.txt", "a") as f:
-                f.write(f"\n--- Intel Report for {url} ---\n")
-                f.write(f"Flagged Keywords: {found_secrets}\n")
-                f.write(f"Emails: {list(set(emails))}\n")
-                if google_keys: f.write(f"Google Keys: {google_keys}\n")
-                f.write("-" * 30 + "\n")
-            
-            print("[*] Results saved to intel_report.txt")
-        else:
-            print(f"[!] Failed to reach site. Status code: {response.status_code}")
-
-    except Exception as e:
-        # This block catches connection errors, timeouts, etc.
-        print(f"[!] Error: {e}")
-
-# --- TEST THE FUNCTION ---
-# These lines have NO spaces before them!
-# --- INTERACTIVE SECTION ---
-# This replaces the hardcoded URL with a prompt for the user
-if __name__ == "__main__":
-    print("\n" + "="*30)
-    print(" WEB RECON SCRAPER v1.0 ")
-    print("="*30)
-    
-    user_url = input("[?] Which URL would you like to scan today? (Include http/https): ")
-    
-    if user_url.startswith("http"):
-        scrape_intel(user_url)
-    else:
-        print("[!] Error: Please enter a valid URL starting with http:// or https://")
-
-import requests
-import re
-import time
-
-# Use a 'set' for visited URLs because it automatically prevents duplicates
-visited_urls = set()
-
-def scrape_intel(url, depth=1):
-    # Stop if we've reached our depth limit or already visited this URL
-    if depth == 0 or url in visited_urls:
-        return
-    
-    visited_urls.add(url)
-    print(f"\n[*] [Depth {depth}] Scanning: {url}")
-    
-    try:
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        response = requests.get(url, headers=headers, timeout=5)
-        
-        if response.status_code == 200:
-            content = response.text
-            
-            # --- EXTRACT EMAILS ---
+            # 3. Extract Emails
             emails = set(re.findall(r'[a-zA-Z0-9.\-_]+@[a-zA-Z0-9.\-_]+\.[a-z]{2,}', content))
+            
+            # 4. Extract all potential Links
+            all_links = re.findall(r'href=["\'](https?://.*?)["\']', content)
+            
+            # 5. Save results to the file immediately
             if emails:
-                print(f"  [+] Found: {list(emails)}")
+                with open("intel_report.txt", "a") as f:
+                    f.write(f"URL: {url}\nEmails Found: {list(emails)}\n\n")
             
-            # --- FIND INTERNAL LINKS ---
-            # This regex looks for links that stay on the same domain
-            links = re.findall(r'href=["\'](https?://.*?)["\']', content)
+            # 6. Filter for "Internal" links (Change 'wikipedia.org' if target is different!)
+            for link in all_links:
+                if "wikipedia.org" in link and link not in visited_urls:
+                    links_to_follow.append(link)
             
-            # --- SAVE DATA ---
-            with open("intel_report.txt", "a") as f:
-                f.write(f"URL: {url}\nEmails: {list(emails)}\n\n")
-
-            # --- RECURSIVE STEP ---
-            for link in list(set(links))[:5]: # Limit to first 5 links per page to stay fast
-                # We only follow links to the same site to avoid wandering off
-                if "wikipedia.org" in link: # Replace with your target domain
-                    time.sleep(1) # Be polite! Don't spam the server
-                    scrape_intel(link, depth - 1)
+            # 7. Recursive step: visit the first 3 links we found
+            for next_link in links_to_follow[:3]:
+                time.sleep(1) # Wait 1 second to be 'stealthy' and polite
+                scrape_intel(next_link, depth - 1)
+        else:
+            print(f"[!] {url} returned Status: {response.status_code}")
 
     except Exception as e:
-        print(f"  [!] Failed {url}: {e}")
+        print(f"[!] Error connecting to {url}: {e}")
 
+# --- 2. THE ENGINE ROOM ---
 if __name__ == "__main__":
-    target = input("[?] Target URL to crawl: ")
-    scrape_intel(target, depth=2) # Depth 2 means Home Page + 1 layer of subpages
-    print(f"\n[!] Recon Complete. Total pages visited: {len(visited_urls)}")
+    print("\n" + "="*45)
+    print("      ETHICAL RECON SPIDER - VERSION 2.0")
+    print("="*45)
+    
+    start_url = input("[?] Enter starting URL: ")
+    
+    # This section manages our 'Worker Threads'
+    # We use 3 workers so it's fast but doesn't crash your machine
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        executor.submit(scrape_intel, start_url, depth=2)
 
-# --- SMART RECURSIVE STEP ---
-            # Keywords that usually lead to better "intel"
-            interesting_words = ['about', 'staff', 'contact', 'login', 'admin', 'portal']
-
-            for link in list(set(links)):
-                # Check if the link is internal AND looks interesting
-                if "wikipedia.org" in link: # Remember to match your target domain!
-                    
-                    # Only follow the link if it contains one of our interesting words
-                    if any(word in link.lower() for word in interesting_words):
-                        if link not in visited_urls:
-                            time.sleep(1)
-                            scrape_intel(link, depth - 1)
+    print(f"\n[!] Mission Complete. {len(visited_urls)} pages mapped.")
+    print("[*] Results recorded in 'intel_report.txt'")
