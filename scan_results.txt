@@ -1,0 +1,47 @@
+--- 2026-02-11 14:37:25 | Target: scanme.nmap.org ---
+Starting Nmap 7.95 ( https://nmap.org ) at 2026-02-11 14:37 UTC
+Nmap scan report for scanme.nmap.org (45.33.32.156)
+Host is up (0.19s latency).
+Other addresses for scanme.nmap.org (not scanned): 2600:3c01::f03c:91ff:fe18:bb2f
+Not shown: 98 filtered tcp ports (no-response)
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+
+Nmap done: 1 IP address (1 host up) scanned in 5.38 seconds
+
+--- 2026-02-11 14:37:30 | Target: wikipedia.org ---
+Starting Nmap 7.95 ( https://nmap.org ) at 2026-02-11 14:37 UTC
+Nmap scan report for wikipedia.org (185.15.59.224)
+Host is up (0.023s latency).
+Other addresses for wikipedia.org (not scanned): 2a02:ec80:300:ed1a::1
+rDNS record for 185.15.59.224: text-lb.esams.wikimedia.org
+Not shown: 98 filtered tcp ports (no-response)
+PORT    STATE SERVICE
+80/tcp  open  http
+443/tcp open  https
+
+Nmap done: 1 IP address (1 host up) scanned in 2.11 seconds
+
+--- 2026-02-11 14:37:33 | Target: google.com ---
+Starting Nmap 7.95 ( https://nmap.org ) at 2026-02-11 14:37 UTC
+Nmap scan report for google.com (142.250.151.101)
+Host is up (0.050s latency).
+Other addresses for google.com (not scanned): 142.250.151.138 142.250.151.139 142.250.151.100 142.250.151.113 142.250.151.102 2a00:1450:4009:c08::66 2a00:1450:4009:c08::71 2a00:1450:4009:c08::64 2a00:1450:4009:c08::8b
+rDNS record for 142.250.151.101: st-in-f101.1e100.net
+Not shown: 98 filtered tcp ports (no-response)
+PORT    STATE SERVICE
+80/tcp  open  http
+443/tcp open  https
+
+Nmap done: 1 IP address (1 host up) scanned in 2.66 seconds
+
+--- 2026-02-11 14:40:46 | scanme.nmap.org ---
+22/tcp open  ssh
+80/tcp open  http
+--- 2026-02-11 14:40:50 | wikipedia.org ---
+80/tcp  open  http
+443/tcp open  https
+--- 2026-02-11 14:40:52 | google.com ---
+80/tcp  open  http
+443/tcp open  https
