@@ -21,3 +21,13 @@ A multi-threaded, recursive web scraper built in Python for security research an
 
 ## ⚠️ Disclaimer
 This tool is for educational and ethical security testing only. Always obtain permission before scanning a target.
+
+### Requirements
+This tool requires the following to be installed on your system:
+* **Python 3.x**
+* **Nmap** (Install via: `sudo apt install nmap`)
+
+### Setup
+To automate the scanner every hour, add the script to your crontab:
+1. Run `crontab -e`
+2. Add: `0 * * * * /usr/bin/python3 /path/to/your/port_checker.py`
