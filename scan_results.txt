@@ -45,3 +45,21 @@ Nmap done: 1 IP address (1 host up) scanned in 2.66 seconds
 --- 2026-02-11 14:40:52 | google.com ---
 80/tcp  open  http
 443/tcp open  https
+--- 2026-02-11 14:51:05 | scanme.nmap.org ---
+22/tcp open  ssh
+80/tcp open  http
+--- 2026-02-11 14:51:10 | wikipedia.org ---
+80/tcp  open  http
+443/tcp open  https
+--- 2026-02-11 14:51:12 | google.com ---
+80/tcp  open  http
+443/tcp open  https
+--- 2026-02-11 14:51:14 | scanme.nmap.org ---
+22/tcp open  ssh
+80/tcp open  http
+--- 2026-02-11 14:51:18 | wikipedia.org ---
+80/tcp  open  http
+443/tcp open  https
+--- 2026-02-11 14:51:20 | google.com ---
+80/tcp  open  http
+443/tcp open  https
