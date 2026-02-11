@@ -35,3 +35,20 @@ for t in TARGETS:
     run_analysis(t)
 
 print(f"\n[***] Done. Check {LOG_FILE} for the full report.")
+__version__ = "1.1.0"
+__author__ = "5m3thNetw0rk"
+# ... (your imports and function stay the same) ...
+
+__version__ = "1.1.0"
+
+# 3. The "Engine" (The Loop)
+if __name__ == "__main__":
+    # This line "announces" the version exactly once
+    print(f"====================================")
+    print(f"   ReconTool v{__version__} - Active")
+    print(f"====================================")
+
+    for t in TARGETS:
+        run_analysis(t)
+
+    print("\n[***] All scans complete. Systems clear.")
